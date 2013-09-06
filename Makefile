@@ -2,7 +2,7 @@
 EMACS ?= emacs
 
 DISTRIB_FILES = twittering-mode.el \
-		twittering+tab.el twittering-stream.el \
+		twittering+tab.el \
 		README README.ja \
 		NEWS NEWS.ja \
 		INSTALL INSTALL.ja \
