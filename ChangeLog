@@ -1,3 +1,51 @@
+2013-06-16  Tadashi MATSUO  <tad@mymail.twin.jp>
+
+	* twittering-mode.el: Fix the bug that retrieved tweets may not be
+	rendered. This bug is caused by the previous commit. Thanks to
+	irie who reported the problem.
+	(twittering-add-statuses-to-timeline-data): call
+	`twittering-render-timeline' correctly.
+
+2013-06-15  Tadashi MATSUO  <tad@mymail.twin.jp>
+
+	* twittering-mode.el: Fix the bug that a hook may be invoked twice
+	for the same timeline. Thanks to irie who discoverd the problem.
+	(twittering-add-statuses-to-timeline-data): do not invoke a hook
+	twice for the timeline spec given as `spec'.
+
+2013-05-07  Tadashi MATSUO  <tad@mymail.twin.jp>
+
+	* LAST-VERSION, NEWS, NEWS.ja, VERSION, doc/web/index.text,
+	doc/web/ja.po, doc/web/publish.rb, doc/web/screenshot.text:
+	release 3.0.0.
+
+2013-04-22  tomykaira <tomykaira@gmail.com>
+
+	* twittering-mode.el: Check effective length of tweet when posting
+	from minibuffer.
+	(twittering-update-status-from-minibuffer): check an effective
+	length of a tweet instead of a literal length.
+
+2013-04-22  Tadashi MATSUO  <tad@mymail.twin.jp>
+
+	* twittering-mode.el: Suppress an error on a sentinel. Previously,
+	an error might be raised from a sentinel when a timeline of
+	non-existent user was requested. A sentinel for such a request
+	tries to remove the timeline spec string corresponding to
+	non-existent user from the history. In the process, conversion
+	from an invalid timeline spec string had caused an error.
+	(twittering-string-to-timeline-spec): add an optional argument
+	NOERROR. If NOERROR is non-nil, the function does not raise an
+	error even if SPEC-STR is invalid as a timeline spec string.
+	(twittering-equal-string-as-timeline): do not raise an error even
+	if either SPEC-STR1 or SPEC-STR2 is invalid as a timeline spec
+	string.
+
+	* twittering-mode.el: Reduce API rate limit information on
+	mode-line.
+	(twittering-get-ratelimit-indicator-string): reduce timelines
+	retrieved by a common API.
+
 2013-03-25  Tadashi MATSUO  <tad@mymail.twin.jp>
 
 	* twittering-mode.el: Decode surrogate pairs in strings returned

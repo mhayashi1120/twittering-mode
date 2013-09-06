@@ -4399,10 +4399,18 @@ Return cons of the spec and the rest string."
     nil)
    ))
 
-(defun twittering-string-to-timeline-spec (spec-str)
+(defun twittering-string-to-timeline-spec (spec-str &optional noerror)
   "Convert SPEC-STR into a timeline spec.
-Return nil if SPEC-STR is invalid as a timeline spec."
-  (let ((result-pair (twittering-extract-timeline-spec spec-str)))
+If SPEC-STR is invalid as a timeline spec string, raise an error or return
+nil if NOERROR is non-nil."
+  (let ((result-pair
+	 (condition-case err
+	     (twittering-extract-timeline-spec spec-str)
+	   (error
+	    (if noerror
+		nil
+	      (signal (car err) (cdr err))
+	      nil)))))
     (if (and result-pair (string= "" (cdr result-pair)))
 	(car result-pair)
       nil)))
@@ -4468,10 +4476,12 @@ If SPEC is not a search timeline spec, return nil."
        (cadr spec)))
 
 (defun twittering-equal-string-as-timeline (spec-str1 spec-str2)
-  "Return non-nil if SPEC-STR1 equals SPEC-STR2 as a timeline spec."
+  "Return non-nil if SPEC-STR1 equals SPEC-STR2 as a timeline spec.
+If either SPEC-STR1 or SPEC-STR2 is invalid as a timeline spec string,
+return nil."
   (if (and (stringp spec-str1) (stringp spec-str2))
-      (let ((spec1 (twittering-string-to-timeline-spec spec-str1))
-	    (spec2 (twittering-string-to-timeline-spec spec-str2)))
+      (let ((spec1 (twittering-string-to-timeline-spec spec-str1 t))
+	    (spec2 (twittering-string-to-timeline-spec spec-str2 t)))
 	(equal spec1 spec2))
     nil))
 
@@ -4810,7 +4820,9 @@ string and the number of new statuses for the timeline."
 		      (twittering-render-timeline
 		       buffer twittering-new-tweets-statuses t)))
 		(when rendered-tweets
-		  (run-hooks 'twittering-new-tweets-hook)
+		  (when (not (equal spec other-spec))
+		    ;; The hook has been alreadly invoked for `spec'.
+		    (run-hooks 'twittering-new-tweets-hook))
 		  `(,other-spec-string ,(length rendered-tweets)))))))
 	(twittering-get-buffer-list))))))
 
@@ -5265,11 +5277,17 @@ header of the API."
 	    (twittering-get-ratelimit-limit)))
    (t
     (mapconcat
-     (lambda (spec)
-       (format "%d/%d"
-	       (twittering-get-ratelimit-remaining spec)
-	       (twittering-get-ratelimit-limit spec)))
-     (twittering-get-primary-base-timeline-specs spec)
+     (lambda (api-string)
+       (let* ((alist (cdr (assoc api-string twittering-api-limit-info-alist)))
+	      (remaining (cdr (assq 'remaining alist)))
+	      (limit (cdr (assq 'limit alist))))
+	 (format "%s/%s"
+		 (if remaining (number-to-string remaining) "?")
+		 (if limit (number-to-string limit) "?"))))
+     (twittering-remove-duplicates
+      (mapcar (lambda (spec)
+		(cdr (assoc spec twittering-timeline-spec-to-api-table)))
+	      (twittering-get-primary-base-timeline-specs spec)))
      "+"))))
 
 ;;;;
@@ -10789,7 +10807,7 @@ Pairs of a key symbol and an associated value are following:
 	(while not-posted-p
 	  (setq status (read-from-minibuffer prompt status map nil 'twittering-tweet-history nil t))
 	  (let ((status status))
-	    (if (< 140 (length status))
+	    (if (< 140 (twittering-effective-length status))
 		(setq prompt "status (too long): ")
 	      (setq prompt "status: ")
 	      (when (twittering-status-not-blank-p status)
