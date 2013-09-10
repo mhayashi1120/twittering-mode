@@ -8624,6 +8624,16 @@ following symbols;
      (let ((retweeted-by
 	    (or (cdr (assq 'retweeting-user-screen-name ,status-sym)) "")))
        (unless (string= "" retweeted-by)
+	 (setq retweeted-by
+	       (propertize retweeted-by
+			   'mouse-face 'highlight
+			   'keymap twittering-mode-on-uri-map
+			   ;; 'uri uri
+			   ;; 'screen-name-in-text user-screen-name
+			   'goto-spec (twittering-make-user-timeline-spec-direct retweeted-by)
+			   'face 'twittering-username-face
+			   'front-sticky nil
+			   'rear-nonsticky t))
 	 (concat " (retweeted by " retweeted-by ")"))))
     ("S" .
      (twittering-make-string-with-user-name-property
